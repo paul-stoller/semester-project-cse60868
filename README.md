@@ -36,7 +36,7 @@ Both datasets were physically downloaded and verified for readability and compat
 
 ### 2. Data Overview
 
-##### CelebA
+#### CelebA
 CelebA contains 202,599 images of 10,177 identities. The images are aligned and cropped to a resolution of 178×218 pixels and include 40 attribute annotations per image. The dataset was collected from the web and exhibits variation in pose, illumination, age, facial expression, background clutter, and camera quality. Faces are roughly centered and aligned, which makes the dataset well suited for embedding-based face recognition models. On average, each identity contains approximately 20 images, but the distribution is not perfectly uniform.
 #### LFW
 LFW contains approximately 13,000 images of 5,749 identities. The funneled (aligned) version was downloaded to ensure more consistent face positioning. Image resolution is approximately 250×250 pixels. The dataset is highly imbalanced: many identities have only one image, while approximately 1,680 identities have two or more images. LFW was independently collected from web sources and contains significant variation in pose, lighting, and imaging conditions.
