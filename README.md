@@ -7,7 +7,7 @@ An important component of the project will be figuring out where and how the pat
 
 Throughout the semester, topics such as feature extraction, invariance, generalization, and robustness will be core to the effectiveness the adversarial patch. The project aims to build my intuition about both the strength and limitations of face recognition systems.
 
-### Part 2: Data ###
+### Data ###
 **Training:**
 For the face images, I would likely use a publicly available image dataset to train and probe the face-recognition model. This set will likely contain around 70% of the available face images. I'll apply adversarial patches on the fly to face images with extensive data augmentation (changes in pose, scale, blur, and patch placement) which should encourage robustness and generalization. I came to Byron's office hours and he suggested using morph-identity and salt-and-pepper noises. Specific face recognition datasets could include VGGFace2 or CelebA.
 
