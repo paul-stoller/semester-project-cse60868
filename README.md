@@ -54,7 +54,7 @@ Approximately 20% of CelebA identities, disjoint from the training identities, f
 
 The validation set is used to tune hyperparameters such as learning rate, patch size, regularization strength (e.g., total variation loss), and the number of optimization steps. It also supports early stopping and evaluates whether the patch generalizes to unseen individuals within the same dataset distribution.
 
-**Unknown Test Subset (LFW**
+**Unknown Test Subset (LFW)**
 The remaining evaluation is performed entirely on LFW, meaning that the remaining 20% of CelebA identities are unused. No training or hyperparameter tuning is conducted using LFW data. Because LFW contains completely different identities and was collected independently, it provides a cross-dataset evaluation of generalization.
 
 This test set measures final attack success rate, changes in embedding distances, and degradation in face verification performance. Using LFW ensures that conclusions about robustness are not artifacts of distributional similarity within CelebA.
