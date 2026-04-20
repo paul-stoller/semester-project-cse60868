@@ -115,6 +115,60 @@ For each resolution, 1000 positive and 1000 negative pairs are sampled from both
 
 The primary metric used is **verification accuracy**, defined as the proportion of correctly classified pairs. This metric is appropriate because the model produces embeddings rather than explicit identity labels. Additional insight is obtained by analyzing the distributions of cosine distances for positive and negative pairs.
 
+#### 2.1 Reproduce Results
+
+The following commands can be used to reproduce the evaluation results reported in this section. All commands are executed from the root of the project repository.
+
+**1. Verification Evaluation (Clean Performance)**
+
+Run verification evaluation at different input resolutions:
+
+```bash
+python -m part4.eval_verification --image-size 112
+python -m part4.eval_verification --image-size 160
+python -m part4.eval_verification --image-size 224
+```
+
+These commands compute training and validation verification accuracy and select an optimal threshold based on the training set.
+
+**2. Robustness Evaluation (Occlusion)**
+
+Run robustness evaluation using localized occlusion:
+
+```bash
+python -m part4.eval_robustness --image-size 112 --patch-frac 0.2
+python -m part4.eval_robustness --image-size 160 --patch-frac 0.2
+python -m part4.eval_robustness --image-size 224 --patch-frac 0.2
+```
+
+This evaluates how performance degrades under structured perturbations.
+
+**3. Select a Validation Sample Pair**
+
+```bash
+python -m part4.select_sample_pair
+```
+
+This saves two images from the validation set into the `samples/` directory.
+
+**4. Run Single-Sample Demo**
+
+Using the threshold obtained from verification:
+
+```bash
+python -m part4.demo_single_pair --threshold 0.673545
+```
+
+This computes the embedding distance between two images and predicts whether they belong to the same identity.
+
+**5. Plot Generation**
+
+```bash
+python -m part4.plot_results
+```
+
+This produces visualizations comparing performance across resolutions and under perturbations.
+
 
 ### 3. Results
 
