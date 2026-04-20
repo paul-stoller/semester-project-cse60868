@@ -100,20 +100,33 @@ Overall, this update reflects steady progress on the most foundational parts of 
 
 ### 1. Experimental Setup
 
-In this project, I evaluate the robustness of a pretrained face recognition system under localized perturbations. The model used is the `InceptionResnetV1` architecture from the `facenet-pytorch` library, pretrained on VGGFace2. The model is used in a frozen configuration to extract feature embeddings rather than performing classification directly.
+In this project, I evaluate the robustness of face recognition systems under localized perturbations using both a verification-based embedding framework and a closed-set identity classification framework. The overall goal is to understand how neural-network-based face representations behave under perturbation, how well they generalize across training and validation data, and how model design choices affect performance.
 
-The CelebA dataset is used for training and validation, with identity-disjoint splits to ensure that no identity appears in more than one subset. This setup prevents identity leakage and enables evaluation of generalization across unseen individuals. Images are resized to fixed resolutions (112×112, 160×160, and 224×224) to study the effect of spatial frequency on robustness.
+The primary dataset used is CelebA. Identity-disjoint train and validation splits are used for the verification experiments to prevent identity leakage and to ensure that performance reflects generalization to unseen individuals. In addition, a closed-set subset of CelebA is used for identity classification, where the same identities are present in both train and validation sets, but images are split within each identity to support supervised classification.
+
+For embedding-based experiments, the main model is InceptionResnetV1 from facenet-pytorch, pretrained on VGGFace2. This model is used as a frozen feature extractor. For classification experiments, two approaches are considered:
+
+1. a **transfer-learning classifier**, which uses a pretrained face-recognition backbone with a trainable classification head, and
+2. a **from-scratch CNN**, trained directly on the closed-set identity classification task.
+
+Images are resized to fixed resolutions of 112×112, 160×160, and 224×224 in order to study the effect of input resolution and, indirectly, spatial frequency on robustness.
 
 
 ### 2. Evaluation Methodology
 
-Although the assignment refers to classification accuracy, this project evaluates performance using a verification framework, which is more appropriate for face recognition systems that operate on embedding similarity rather than discrete class labels.
+Although the assignment refers to classification accuracy, this project evaluates face recognition performance primarily using a verification framework, which is more appropriate for systems that operate on embedding similarity rather than discrete class labels.
 
-Pairs of images are sampled as either same-identity (positive pairs) or different-identity (negative pairs). The cosine distance between embeddings is computed, and a threshold is selected on the training set to distinguish between the two classes. This threshold is then applied to validation pairs to compute verification accuracy.
+In the verification setup, pairs of images are sampled as either:
+- positive pairs: two images of the same identity
+- negative pairs: two images of different identities
 
-For each resolution, 1000 positive and 1000 negative pairs are sampled from both the training and validation sets. Robustness is evaluated by applying a localized square occlusion covering 20% of the image area. The same evaluation procedure is repeated on perturbed images, allowing direct comparison between clean and perturbed performance.
+For each pair, embeddings are extracted and the cosine distance between embeddings is computed. A threshold is selected on the training set to distinguish between same-identity and different-identity pairs. This threshold is then applied to the validation set to compute verification accuracy.
 
-The primary metric used is **verification accuracy**, defined as the proportion of correctly classified pairs. This metric is appropriate because the model produces embeddings rather than explicit identity labels. Additional insight is obtained by analyzing the distributions of cosine distances for positive and negative pairs.
+For each resolution, 1000 positive and 1000 negative pairs are sampled from both the training and validation sets. Robustness is evaluated by applying a localized square occlusion covering 20% of the image area. The same evaluation procedure is then repeated on perturbed images.
+
+The primary metric used in the verification experiments is verification accuracy, defined as the proportion of correctly classified pairs. This metric is appropriate because the model produces embeddings rather than explicit identity labels. Additional insight is obtained by analyzing the cosine-distance distributions for same-identity and different-identity pairs.
+
+In addition to verification, a closed-set classification experiment was implemented. In this case, the model predicts an explicit identity label from a fixed set of classes. This provides a direct measure of training and validation classification accuracy and supports comparison between training a model from scratch and training only a classifier head on top of pretrained embeddings.
 
 #### 2.1 Reproduce Results
 
@@ -151,7 +164,7 @@ python -m part4.select_sample_pair
 
 This saves two images from the validation set into the `samples/` directory.
 
-**4. Run Single-Sample Demo**
+**4. Run Single-Sample Verification Demo**
 
 Using the threshold obtained from verification:
 
@@ -161,7 +174,30 @@ python -m part4.demo_single_pair --threshold 0.673545
 
 This computes the embedding distance between two images and predicts whether they belong to the same identity.
 
-**5. Plot Generation**
+
+**5. Train the Transfer-Learning Classifier**
+```bash
+python train_classifier_closed_set.py
+```
+
+This trains a classification head on top of a pretrained face-recognition backbone.
+
+**6. Train the From-Scratch CNN**
+```bash
+python train_cnn.py
+```
+
+This trains a convolutional neural network from scratch for closed-set identity classification.
+
+**7. Run Single-Sample Classification Demo**
+```bash
+python predict_single_classifier.py --image-path path/to/validation_sample.jpg
+```
+
+This loads the trained classifier and predicts the identity label for a single validation image.
+
+
+**8. Plot Generation**
 
 ```bash
 python -m part4.plot_results
@@ -170,7 +206,7 @@ python -m part4.plot_results
 This produces visualizations comparing performance across resolutions and under perturbations.
 
 
-### 3. Results
+### 3. Verification Results
 
 **3.1 Verification Accuracy Across Resolutions**
 
@@ -190,7 +226,6 @@ At higher resolution (224×224), performance improves further:
 - Validation accuracy: **94.85%**
 
 These results demonstrate a strong dependence on input resolution, suggesting that higher spatial detail improves the separability of identity embeddings.
-
 
 **3.2 Robustness to Localized Occlusion**
 
@@ -213,7 +248,6 @@ At higher resolution (224×224):
 
 Across all resolutions, perturbations consistently degrade performance, though the magnitude of the effect varies.
 
-
 **3.3 Distance Distribution Analysis**
 
 At 160×160 resolution:
@@ -226,27 +260,77 @@ At 160×160 resolution:
 
 The perturbation significantly increases distances for same-identity pairs while leaving different-identity distances largely unchanged.
 
+This is an important result because it shows that localized perturbations primarily disrupt within-class consistency. Images of the same person become less similar under perturbation, while different identities remain well separated. In other words, the perturbation makes the same person look “different” to the model without substantially changing the relationship between different people.
 
-### 4. Analysis and Discussion
 
-The model achieves strong generalization performance, with a training verification accuracy of 93.55% and a validation accuracy of 93.20%. The small gap between training and validation performance indicates that the threshold selection and evaluation procedure generalize well across unseen identities, and that the identity-disjoint split successfully prevents overfitting.
+### 4. Closed-Set Classification Results
+In addition to the verification experiments, a closed-set identity classification framework was implemented in order to directly train a neural network and report classification accuracy on training and validation data.
+
+**4.1 Transfer-Learning Classifier**
+
+The first classification model uses a pretrained face-recognition backbone with a trainable classification head. The backbone remains frozen, while the final classification layer is trained using cross-entropy loss.
+
+This model achieved approximately:
+
+Training accuracy: 94–95%
+Validation accuracy: 92–93%
+
+The small train/validation gap indicates strong generalization. These results also demonstrate that transfer learning is highly effective for face recognition, especially when the amount of per-identity training data is limited.
+
+**4.2 From-Scratch CNN Classifier**
+
+To complement the transfer-learning approach, a convolutional neural network was trained from scratch on the same closed-set classification task. This model consisted of three convolutional blocks with batch normalization, ReLU activations, and pooling layers, followed by a fully connected classification head.
+
+The classification problem was built by selecting a subset of identities from CelebA, specifically a closed set of identities with sufficient images per class. Images from those identities were split into training and validation subsets so that the label space was consistent across both partitions.
+
+Initial training attempts resulted in near-random performance, approximately 2% accuracy, which corresponds to chance performance over many classes. This problem was corrected by adding proper input normalization, reducing the learning rate, increasing the number of training epochs, and introducing light data augmentation such as horizontal flips and small rotations.
+
+After these fixes, the model successfully converged. The final performance of the from-scratch CNN was:
+
+Training accuracy: approximately 90–91%
+Best validation accuracy: 68.32%
+
+This is a substantial improvement over the earlier failed training runs, but it still reflects a significant generalization gap.
+
+**4.3 Comparison of Training Approaches**
+
+A direct comparison between the transfer-learning classifier and the from-scratch CNN shows a clear difference in generalization:
+
+Model	Training Accuracy	Validation Accuracy
+Transfer Learning	~94–95%	~92–93%
+From-Scratch CNN	~90-91%	68.32%
+
+This comparison highlights the importance of large-scale pretraining for face recognition tasks. The pretrained backbone already encodes rich facial representations learned from a much larger and more diverse dataset, while the from-scratch model must learn low-level and high-level facial features directly from a comparatively small closed-set subset of CelebA.
+
+As a result, the from-scratch model is much more prone to overfitting and does not generalize nearly as well as the transfer-learning model.
+
+### 5. Analysis and Discussion
+
+The pretrained verification model achieves strong generalization performance, with a training verification accuracy of 93.55% and a validation accuracy of 93.20%. The small gap between training and validation performance indicates that the threshold selection and evaluation procedure generalize well across unseen identities, and that the identity-disjoint split successfully prevents overfitting.
 
 Under localized occlusion, validation accuracy decreases to 90.30%, corresponding to a drop of approximately 2.9 percentage points. This indicates that while the embedding model is relatively robust, it is still sensitive to structured local perturbations.
 
 A more detailed analysis of embedding distances reveals that the perturbation primarily affects same-identity pairs. The mean cosine distance for same-identity pairs increases from 0.403 to 0.460, indicating that images of the same individual become less similar under occlusion. In contrast, the mean distance for different-identity pairs remains largely unchanged (0.960 vs. 0.956).
 
-This suggests that localized perturbations primarily disrupt within-class consistency rather than between-class separation. In other words, the model remains capable of distinguishing different individuals, but becomes less reliable at recognizing multiple images of the same person as belonging to the same identity. This observation aligns with the hypothesis that face-recognition systems may be particularly vulnerable in preserving fine-grained identity consistency under localized perturbations.
+This suggests that localized perturbations primarily disrupt within-class consistency rather than between-class separation. In other words, the model remains capable of distinguishing different individuals, but becomes less reliable at recognizing multiple images of the same person as belonging to the same identity. This observation aligns well with the idea that face-recognition systems may be particularly vulnerable in preserving fine-grained identity consistency under localized perturbations.
 
-Furthermore, the strong dependence on image resolution highlights the role of spatial frequency in face recognition. At lower resolution (112×112), both clean and perturbed performance degrade substantially, indicating that important identity features are lost. At higher resolution (224×224), performance improves, suggesting that higher-frequency features contribute significantly to embedding quality. However, this also implies that adversarial perturbations targeting specific spatial frequencies may be more effective at higher resolutions.
+The classification experiments provide a complementary perspective. The transfer-learning classifier shows that strong facial representations can support highly accurate identity recognition with relatively little task-specific training. By contrast, the from-scratch CNN achieves much lower validation accuracy and exhibits a much larger train/validation gap, demonstrating how difficult it is to learn robust face representations directly from limited data.
+
+This comparison is one of the most important findings of the project. It shows that the success of face-recognition systems depends not only on architecture, but also on prior learned representations. Large-scale pretraining plays a critical role in enabling good generalization.
+
+Furthermore, the strong dependence on image resolution highlights the role of spatial frequency in face recognition. At lower resolution (112×112), both clean and perturbed performance degrade substantially, indicating that important identity features are lost. At higher resolution (224×224), performance improves, suggesting that higher-frequency features contribute significantly to embedding quality. This also implies that perturbations targeting certain spatial frequencies could become more effective depending on image scale.
 
 
-### 5. Limitations and Future Work
+### 6. Limitations and Future Work
 
-While the current experiments provide insight into model robustness, several limitations remain. First, the perturbation used in this study is a simple square occlusion. More sophisticated adversarial patches optimized using gradient-based methods such as FGSM or PGD could produce stronger and more targeted attacks.
+While the current experiments provide meaningful insight into both learning and robustness, several limitations remain.
 
-Second, the evaluation focuses on a single pretrained model. Future work could explore cross-model transferability of adversarial perturbations to assess whether vulnerabilities generalize across architectures.
+First, the perturbation used in the robustness experiments is a simple localized square occlusion rather than a fully optimized adversarial patch. This provides a controlled baseline but does not yet represent the strongest possible attack. A natural extension would be to evaluate gradient-based perturbations such as FGSM or PGD, and eventually compare them to structured patch-based attacks.
 
-Third, the current analysis does not explicitly control for patch placement. Investigating the impact of perturbations applied to specific facial regions (e.g., eyes, nose, mouth) could provide deeper insight into which features are most critical for identity representation.
+Second, the verification experiments use a single pretrained embedding model. Future work could evaluate whether the same robustness trends hold across multiple architectures.
 
-Finally, further analysis of spatial frequency sensitivity could be conducted by systematically varying resolution and filtering inputs, as suggested by the relationship between convolutional filters and frequency response.
+Third, the from-scratch classifier is trained on a limited closed-set subset of CelebA. Although this is sufficient to demonstrate learning and generalization behavior, larger and more balanced datasets would likely improve performance.
 
+Fourth, patch placement is currently random and not tied to specific facial landmarks. A more detailed study could examine whether perturbations placed near highly informative regions such as the eyes, nose, or mouth cause larger degradations in performance.
+
+Finally, additional frequency-based analysis could strengthen the connection between resolution changes and convolutional sensitivity, especially given the observed differences in robustness across 112×112, 160×160, and 224×224.
