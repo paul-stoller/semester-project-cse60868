@@ -92,3 +92,112 @@ A related challenge is deciding how much emphasis to place on CelebA given its l
 The next steps are clear. First, I want to expand the preprocessing pipeline to include controlled augmentations such as blur, affine transformations, and noise. Second, I want to extend the baseline evaluation so that it includes LFW as an unseen test distribution. Third, I want to improve the metrics beyond simple mean cosine shift so that I can examine how perturbations affect verification-style comparisons more directly. Only after those pieces are stable do I plan to move toward the adversarial-patch-specific portion of the project. At this stage, my focus is on building a reliable and interpretable infrastructure so that any later robustness results are meaningful.
 
 Overall, this update reflects steady progress on the most foundational parts of the project. I now have identity-disjoint data handling, a frozen pretrained embedding model, and a runnable benign perturbation baseline that measures embedding drift. The main challenge is not a lack of direction, but rather the amount of careful setup required before the core research question can be tested rigorously. This has been valuable because it has made clear that robust experimental design in face-recognition settings depends heavily on getting the data partitioning, preprocessing, and evaluation protocol right from the beginning.
+
+****
+
+## Part 4: Final Results and Analysis
+
+### 1. Experimental Setup
+
+In this project, I evaluate the robustness of a pretrained face recognition system under localized perturbations. The model used is the `InceptionResnetV1` architecture from the `facenet-pytorch` library, pretrained on VGGFace2. The model is used in a frozen configuration to extract feature embeddings rather than performing classification directly.
+
+The CelebA dataset is used for training and validation, with identity-disjoint splits to ensure that no identity appears in more than one subset. This setup prevents identity leakage and enables evaluation of generalization across unseen individuals. Images are resized to fixed resolutions (112×112, 160×160, and 224×224) to study the effect of spatial frequency on robustness.
+
+---
+
+### 2. Evaluation Methodology
+
+Although the assignment refers to classification accuracy, this project evaluates performance using a verification framework, which is more appropriate for face recognition systems that operate on embedding similarity rather than discrete class labels.
+
+Pairs of images are sampled as either same-identity (positive pairs) or different-identity (negative pairs). The cosine distance between embeddings is computed, and a threshold is selected on the training set to distinguish between the two classes. This threshold is then applied to validation pairs to compute verification accuracy.
+
+For each resolution, 1000 positive and 1000 negative pairs are sampled from both the training and validation sets. Robustness is evaluated by applying a localized square occlusion covering 20% of the image area. The same evaluation procedure is repeated on perturbed images, allowing direct comparison between clean and perturbed performance.
+
+The primary metric used is **verification accuracy**, defined as the proportion of correctly classified pairs. This metric is appropriate because the model produces embeddings rather than explicit identity labels. Additional insight is obtained by analyzing the distributions of cosine distances for positive and negative pairs.
+
+---
+
+### 3. Results
+
+#### 3.1 Verification Accuracy Across Resolutions
+
+At the baseline resolution of 160×160, the model achieves:
+
+- Training accuracy: **93.55%**
+- Validation accuracy: **93.20%**
+
+The small gap between training and validation accuracy indicates strong generalization and confirms that the identity-disjoint split successfully prevents overfitting.
+
+At lower resolution (112×112), performance degrades significantly:
+
+- Validation accuracy: **71.40%**
+
+At higher resolution (224×224), performance improves further:
+
+- Validation accuracy: **94.85%**
+
+These results demonstrate a strong dependence on input resolution, suggesting that higher spatial detail improves the separability of identity embeddings.
+
+---
+
+#### 3.2 Robustness to Localized Occlusion
+
+At the baseline resolution (160×160), the model achieves:
+
+- Clean validation accuracy: **93.20%**
+- Perturbed validation accuracy: **90.30%**
+
+This corresponds to a drop of approximately **2.9 percentage points**, indicating that the model is relatively robust but still sensitive to localized perturbations.
+
+At lower resolution (112×112):
+
+- Clean accuracy: **71.40%**
+- Perturbed accuracy: **67.35%**
+
+At higher resolution (224×224):
+
+- Clean accuracy: **94.85%**
+- Perturbed accuracy: **92.95%**
+
+Across all resolutions, perturbations consistently degrade performance, though the magnitude of the effect varies.
+
+---
+
+#### 3.3 Distance Distribution Analysis
+
+At 160×160 resolution:
+
+- Clean same-identity distance: **0.403**
+- Perturbed same-identity distance: **0.460**
+
+- Clean different-identity distance: **0.960**
+- Perturbed different-identity distance: **0.956**
+
+The perturbation significantly increases distances for same-identity pairs while leaving different-identity distances largely unchanged.
+
+---
+
+### 4. Analysis and Discussion
+
+The model achieves strong generalization performance, with a training verification accuracy of 93.55% and a validation accuracy of 93.20%. The small gap between training and validation performance indicates that the threshold selection and evaluation procedure generalize well across unseen identities, and that the identity-disjoint split successfully prevents overfitting.
+
+Under localized occlusion, validation accuracy decreases to 90.30%, corresponding to a drop of approximately 2.9 percentage points. This indicates that while the embedding model is relatively robust, it is still sensitive to structured local perturbations.
+
+A more detailed analysis of embedding distances reveals that the perturbation primarily affects same-identity pairs. The mean cosine distance for same-identity pairs increases from 0.403 to 0.460, indicating that images of the same individual become less similar under occlusion. In contrast, the mean distance for different-identity pairs remains largely unchanged (0.960 vs. 0.956).
+
+This suggests that localized perturbations primarily disrupt within-class consistency rather than between-class separation. In other words, the model remains capable of distinguishing different individuals, but becomes less reliable at recognizing multiple images of the same person as belonging to the same identity. This observation aligns with the hypothesis that face-recognition systems may be particularly vulnerable in preserving fine-grained identity consistency under localized perturbations.
+
+Furthermore, the strong dependence on image resolution highlights the role of spatial frequency in face recognition. At lower resolution (112×112), both clean and perturbed performance degrade substantially, indicating that important identity features are lost. At higher resolution (224×224), performance improves, suggesting that higher-frequency features contribute significantly to embedding quality. However, this also implies that adversarial perturbations targeting specific spatial frequencies may be more effective at higher resolutions.
+
+---
+
+### 5. Limitations and Future Work
+
+While the current experiments provide insight into model robustness, several limitations remain. First, the perturbation used in this study is a simple square occlusion. More sophisticated adversarial patches optimized using gradient-based methods such as FGSM or PGD could produce stronger and more targeted attacks.
+
+Second, the evaluation focuses on a single pretrained model. Future work could explore cross-model transferability of adversarial perturbations to assess whether vulnerabilities generalize across architectures.
+
+Third, the current analysis does not explicitly control for patch placement. Investigating the impact of perturbations applied to specific facial regions (e.g., eyes, nose, mouth) could provide deeper insight into which features are most critical for identity representation.
+
+Finally, further analysis of spatial frequency sensitivity could be conducted by systematically varying resolution and filtering inputs, as suggested by the relationship between convolutional filters and frequency response.
+
