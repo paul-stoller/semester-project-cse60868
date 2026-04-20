@@ -97,15 +97,14 @@ Overall, this update reflects steady progress on the most foundational parts of 
 
 ## Part 4: Final Results and Analysis
 
-### 1. Experimental Setup
+#### 1. Experimental Setup
 
 In this project, I evaluate the robustness of a pretrained face recognition system under localized perturbations. The model used is the `InceptionResnetV1` architecture from the `facenet-pytorch` library, pretrained on VGGFace2. The model is used in a frozen configuration to extract feature embeddings rather than performing classification directly.
 
 The CelebA dataset is used for training and validation, with identity-disjoint splits to ensure that no identity appears in more than one subset. This setup prevents identity leakage and enables evaluation of generalization across unseen individuals. Images are resized to fixed resolutions (112×112, 160×160, and 224×224) to study the effect of spatial frequency on robustness.
 
----
 
-### 2. Evaluation Methodology
+#### 2. Evaluation Methodology
 
 Although the assignment refers to classification accuracy, this project evaluates performance using a verification framework, which is more appropriate for face recognition systems that operate on embedding similarity rather than discrete class labels.
 
@@ -115,11 +114,11 @@ For each resolution, 1000 positive and 1000 negative pairs are sampled from both
 
 The primary metric used is **verification accuracy**, defined as the proportion of correctly classified pairs. This metric is appropriate because the model produces embeddings rather than explicit identity labels. Additional insight is obtained by analyzing the distributions of cosine distances for positive and negative pairs.
 
----
 
-### 3. Results
 
-#### 3.1 Verification Accuracy Across Resolutions
+#### 3. Results
+
+##### 3.1 Verification Accuracy Across Resolutions
 
 At the baseline resolution of 160×160, the model achieves:
 
@@ -140,7 +139,7 @@ These results demonstrate a strong dependence on input resolution, suggesting th
 
 ---
 
-#### 3.2 Robustness to Localized Occlusion
+##### 3.2 Robustness to Localized Occlusion
 
 At the baseline resolution (160×160), the model achieves:
 
@@ -163,7 +162,7 @@ Across all resolutions, perturbations consistently degrade performance, though t
 
 ---
 
-#### 3.3 Distance Distribution Analysis
+##### 3.3 Distance Distribution Analysis
 
 At 160×160 resolution:
 
@@ -177,7 +176,7 @@ The perturbation significantly increases distances for same-identity pairs while
 
 ---
 
-### 4. Analysis and Discussion
+#### 4. Analysis and Discussion
 
 The model achieves strong generalization performance, with a training verification accuracy of 93.55% and a validation accuracy of 93.20%. The small gap between training and validation performance indicates that the threshold selection and evaluation procedure generalize well across unseen identities, and that the identity-disjoint split successfully prevents overfitting.
 
@@ -189,9 +188,8 @@ This suggests that localized perturbations primarily disrupt within-class consis
 
 Furthermore, the strong dependence on image resolution highlights the role of spatial frequency in face recognition. At lower resolution (112×112), both clean and perturbed performance degrade substantially, indicating that important identity features are lost. At higher resolution (224×224), performance improves, suggesting that higher-frequency features contribute significantly to embedding quality. However, this also implies that adversarial perturbations targeting specific spatial frequencies may be more effective at higher resolutions.
 
----
 
-### 5. Limitations and Future Work
+#### 5. Limitations and Future Work
 
 While the current experiments provide insight into model robustness, several limitations remain. First, the perturbation used in this study is a simple square occlusion. More sophisticated adversarial patches optimized using gradient-based methods such as FGSM or PGD could produce stronger and more targeted attacks.
 
