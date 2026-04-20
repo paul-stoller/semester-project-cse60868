@@ -1,0 +1,24 @@
+{
+  "image_size": 112,
+  "patch_frac": 0.2,
+  "threshold": 0.6289407014846802,
+  "train_clean_accuracy": 0.7285,
+  "validation_clean_accuracy": 0.714,
+  "validation_perturbed_accuracy": 0.6735,
+  "validation_clean_summary": {
+    "mean_positive_distance": 0.5195066332817078,
+    "mean_negative_distance": 0.7700284719467163,
+    "std_positive_distance": 0.22558867931365967,
+    "std_negative_distance": 0.21759727597236633,
+    "num_positive_pairs": 1000,
+    "num_negative_pairs": 1000
+  },
+  "validation_perturbed_summary": {
+    "mean_positive_distance": 0.5510075688362122,
+    "mean_negative_distance": 0.7418992519378662,
+    "std_positive_distance": 0.2168281227350235,
+    "std_negative_distance": 0.2188420593738556,
+    "num_positive_pairs": 1000,
+    "num_negative_pairs": 1000
+  }
+}
