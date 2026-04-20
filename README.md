@@ -97,6 +97,7 @@ Overall, this update reflects steady progress on the most foundational parts of 
 
 ## Part 4: Final Results and Analysis
 
+
 ### 1. Experimental Setup
 
 In this project, I evaluate the robustness of a pretrained face recognition system under localized perturbations. The model used is the `InceptionResnetV1` architecture from the `facenet-pytorch` library, pretrained on VGGFace2. The model is used in a frozen configuration to extract feature embeddings rather than performing classification directly.
@@ -113,7 +114,6 @@ Pairs of images are sampled as either same-identity (positive pairs) or differen
 For each resolution, 1000 positive and 1000 negative pairs are sampled from both the training and validation sets. Robustness is evaluated by applying a localized square occlusion covering 20% of the image area. The same evaluation procedure is repeated on perturbed images, allowing direct comparison between clean and perturbed performance.
 
 The primary metric used is **verification accuracy**, defined as the proportion of correctly classified pairs. This metric is appropriate because the model produces embeddings rather than explicit identity labels. Additional insight is obtained by analyzing the distributions of cosine distances for positive and negative pairs.
-
 
 
 ### 3. Results
@@ -172,7 +172,6 @@ At 160×160 resolution:
 
 The perturbation significantly increases distances for same-identity pairs while leaving different-identity distances largely unchanged.
 
----
 
 ### 4. Analysis and Discussion
 
