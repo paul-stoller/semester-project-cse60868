@@ -1,0 +1,15 @@
+{
+  "clean_accuracy": 0.645,
+  "eyes_only_accuracy": 0.305,
+  "eyes_accuracy_drop": 0.34,
+  "eyebrows_only_accuracy": 0.315,
+  "eyebrows_accuracy_drop": 0.33,
+  "nose_only_accuracy": 0.275,
+  "nose_accuracy_drop": 0.37,
+  "mouth_only_accuracy": 0.29,
+  "mouth_accuracy_drop": 0.35500000000000004,
+  "hair_only_accuracy": 0.41,
+  "hair_accuracy_drop": 0.23500000000000004,
+  "skin_only_accuracy": 0.47,
+  "skin_accuracy_drop": 0.17500000000000004
+}
